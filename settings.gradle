@@ -15,5 +15,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Thuc_Tap_TMDD_FPOLY"
-include(":app")
+include ':app'
  

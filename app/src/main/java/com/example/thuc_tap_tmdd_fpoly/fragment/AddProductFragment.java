@@ -248,7 +248,6 @@ public class AddProductFragment extends Fragment  {
 
                         Discount discount = new Discount();
                         discount.setAmount(10.0);
-                        // Tạo đối tượng Product và đánh dấu là sản phẩm do người dùng đăng
                         Product product = new Product(
                                 productId, userId, Title, productType,
                                 "categoryID", Brand, Des, imageUrls, selectedColors, 1000, "ngon", Quantity, Price, selectedSize, discount
@@ -257,7 +256,7 @@ public class AddProductFragment extends Fragment  {
 
                         productsRef.child(productId).setValue(product);
                         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
-                        fragmentManager.popBackStack(); // Quay lại màn hình trước đó
+                        fragmentManager.popBackStack();
 
                         ((ManagerProductActivity) requireActivity()).showFloatingActionButton();
                         isAddingProduct = false;
