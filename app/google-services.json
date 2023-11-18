@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "885334430018",
+    "firebase_url": "https://thuc-tap-tmdd-fpoly-default-rtdb.firebaseio.com",
+    "project_id": "thuc-tap-tmdd-fpoly",
+    "storage_bucket": "thuc-tap-tmdd-fpoly.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:885334430018:android:a8bf22858d43b5138ef8db",
+        "android_client_info": {
+          "package_name": "com.example.thuc_tap_tmdd_fpoly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8Q3Ku3WVPSsTKeuxQXC7XGP8m36VoVe0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Thuc_Tap_TMDD_FPOLY</string>
+    <string name="app_name">App bán hàng</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title">
+Shipping details
+</string>
 </resources>
