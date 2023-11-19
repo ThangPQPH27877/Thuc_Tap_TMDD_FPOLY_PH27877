@@ -8,6 +8,7 @@
 
 
     <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout_editor_absoluteX="53dp"
@@ -311,6 +312,7 @@
                 android:layout_height="match_parent"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -335,15 +337,16 @@
                     android:text="See all"
                     android:textColor="@color/placeorder" />
             </LinearLayout>
+
             <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPaperSlider"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:layout_margin="9dp"
-                android:id="@+id/viewPaperSlider"
-                tools:ignore="MissingConstrains"
-                android:layout_marginEnd="9dp"
                 android:layout_marginStart="9dp"
-                />
+                android:layout_marginEnd="9dp"
+                tools:ignore="MissingConstrains" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -368,6 +371,7 @@
                     android:text="See all"
                     android:textColor="@color/placeorder" />
             </LinearLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/view2"
                 android:layout_width="match_parent"
@@ -378,5 +382,16 @@
         </LinearLayout>
 
     </ScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatMess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#64CEFD"
+        android:contentDescription="Chat Bot"
+        android:src="@drawable/baseline_chat_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

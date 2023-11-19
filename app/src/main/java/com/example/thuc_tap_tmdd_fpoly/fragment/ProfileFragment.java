@@ -64,7 +64,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     private DatabaseReference mReference;
     private FirebaseUser firebaseUser;
     private ImageView imgUser;
-    private CardView cvOut, cvOder, cvPayment, cvReview, cvTK, cvPromotion, cvQLUser, cvQLProduct, cvChangePass, cvAdddiachi;
+    private CardView cvOut, cvOder, cvPayment, cvTK, cvQLUser, cvQLProduct, cvChangePass, cvAdddiachi;
     private TextView textViewName, textSDT, textViewEmail, textFixInfor;
     private ImageView dialog_AVT;
     private TextInputEditText edImg;
@@ -100,9 +100,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         cvOut = view.findViewById(R.id.cvOut);
         cvOder = view.findViewById(R.id.cvOderForShop);
         cvPayment = view.findViewById(R.id.cvPayment);
-        cvReview = view.findViewById(R.id.cvReView);
         cvTK = view.findViewById(R.id.cvTK);
-        cvPromotion = view.findViewById(R.id.cvPromotion);
         cvQLUser = view.findViewById(R.id.cvQLUser);
         cvQLProduct = view.findViewById(R.id.cvQLProduct);
         cvChangePass = view.findViewById(R.id.cvChangePass);
@@ -142,7 +140,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         cvOder.setOnClickListener(this);
         cvOut.setOnClickListener(this);
-        cvPromotion.setOnClickListener(this);
+
         cvPayment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -152,7 +150,6 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         });
         cvChangePass.setOnClickListener(this);
         cvQLProduct.setOnClickListener(this);
-        cvReview.setOnClickListener(this);
         cvTK.setOnClickListener(this);
         cvQLUser.setOnClickListener(this);
         cvAdddiachi.setOnClickListener(new View.OnClickListener() {
@@ -395,16 +392,12 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             startActivity(new Intent(getContext(), OrderOfShopActivity.class));
         } else if (view.getId() == R.id.cvPayment) {
 
-        } else if (view.getId() == R.id.cvPromotion) {
-
         } else if (view.getId() == R.id.cvTK) {
             startActivity(new Intent(getContext(), StatisticalActivity.class));
         } else if (view.getId() == R.id.cvQLUser) {
             startActivity(new Intent(getContext(), ListUserActivity.class));
         } else if (view.getId() == R.id.cvQLProduct) {
             startActivity(new Intent(getContext(), ManagerProductActivity.class));
-        } else if (view.getId() == R.id.cvReView) {
-
         } else if (view.getId() == R.id.cvChangePass) {
             startActivity(new Intent(getContext(), ChangePassword_Activity.class));
         } else if (view.getId() == R.id.textFixInfor) {

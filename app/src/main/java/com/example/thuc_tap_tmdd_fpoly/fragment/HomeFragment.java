@@ -1,6 +1,8 @@
 package com.example.thuc_tap_tmdd_fpoly.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,7 +10,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,11 +29,15 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.thuc_tap_tmdd_fpoly.R;
 import com.example.thuc_tap_tmdd_fpoly.activity.CartActivity;
+import com.example.thuc_tap_tmdd_fpoly.adapter.MessageAdapter;
 import com.example.thuc_tap_tmdd_fpoly.adapter.ProductAdapter;
 import com.example.thuc_tap_tmdd_fpoly.adapter.ProductHomeAdapter;
 import com.example.thuc_tap_tmdd_fpoly.adapter.SlideImageAdapter;
 import com.example.thuc_tap_tmdd_fpoly.adapter.SliderImageAdapter;
+
+import com.example.thuc_tap_tmdd_fpoly.model.ChatBot;
 import com.example.thuc_tap_tmdd_fpoly.model.Product;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -55,6 +64,12 @@ public class HomeFragment extends Fragment {
     RecyclerView rvManager;
 
     ProductAdapter productAdapter;
+
+    private ChatBot chatBot;
+    private MessageAdapter messageAdapter;
+    private Spinner spinnerQuestionList;
+
+    private RecyclerView recyclerView;
     List<Product> productList;
     DatabaseReference databaseReference;
 
@@ -88,6 +103,13 @@ public class HomeFragment extends Fragment {
         circleIndicator = view.findViewById(R.id.circle_indicator);
         RecyclerView recyclerView = view.findViewById(R.id.view1);
         RecyclerView recyclerView2 = view.findViewById(R.id.view2);
+        FloatingActionButton floatMess = view.findViewById(R.id.floatMess);
+        floatMess.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogChatbot();
+            }
+        });
         imgCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,6 +190,51 @@ public class HomeFragment extends Fragment {
 
 
         return view;
+    }
+    private void showDialogChatbot() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_chatbot, null);
+
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        recyclerView = dialogView.findViewById(R.id.recyclerView);
+        messageAdapter = new MessageAdapter();
+        recyclerView.setAdapter(messageAdapter);
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireContext());
+        recyclerView.setLayoutManager(layoutManager);
+
+        chatBot = new ChatBot();
+
+        spinnerQuestionList = dialogView.findViewById(R.id.spinnerQuestionList);
+        List<String> questionsList = chatBot.getQuestions();
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, questionsList);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerQuestionList.setAdapter(spinnerAdapter);
+
+        Button btnSend = dialogView.findViewById(R.id.btnSend);
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String selectedQuestion = spinnerQuestionList.getSelectedItem().toString();
+
+                messageAdapter.addUserMessage(selectedQuestion);
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        String botResponse = chatBot.getResponse(selectedQuestion);
+                        messageAdapter.addBotMessage(botResponse);
+                    }
+                }, 2000);
+
+                spinnerQuestionList.setSelection(0);
+            }
+        });
     }
     private void loadDataFromFirebase() {
         databaseReference = FirebaseDatabase.getInstance().getReference("products");
