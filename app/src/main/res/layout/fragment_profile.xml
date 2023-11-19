@@ -20,7 +20,7 @@
     <LinearLayout
         android:id="@+id/topUS"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="175dp"
         android:layout_below="@id/tlt"
         android:background="#DDA95B"
         android:orientation="horizontal"
@@ -77,6 +77,15 @@
                 android:textSize="19sp" />
 
             <TextView
+                android:id="@+id/textWallet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="Ví : 0 VNĐ"
+                android:textSize="19sp"
+                android:textStyle="italic" />
+
+            <TextView
                 android:id="@+id/textFixInfor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,6 +96,18 @@
                 android:textColor="@color/white"
                 android:textSize="17sp"
                 android:textStyle="italic" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            >
+            <ImageView
+                android:id="@+id/update_admin"
+                android:layout_width="75dp"
+                android:layout_height="40dp"
+                android:src="@drawable/update_admin"
+                />
         </LinearLayout>
     </LinearLayout>
 

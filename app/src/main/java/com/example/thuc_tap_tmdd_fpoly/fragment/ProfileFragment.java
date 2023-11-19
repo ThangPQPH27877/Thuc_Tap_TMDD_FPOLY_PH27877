@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -28,6 +29,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 
+import com.example.thuc_tap_tmdd_fpoly.MainActivity;
 import com.example.thuc_tap_tmdd_fpoly.R;
 import com.example.thuc_tap_tmdd_fpoly.activity.ChangePassword_Activity;
 import com.example.thuc_tap_tmdd_fpoly.activity.ListUserActivity;
@@ -39,6 +41,7 @@ import com.example.thuc_tap_tmdd_fpoly.activity.StatisticalActivity;
 import com.example.thuc_tap_tmdd_fpoly.activity.TopUpCardActivity;
 import com.example.thuc_tap_tmdd_fpoly.database.FireBaseType;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import com.google.android.gms.tasks.Task;
@@ -63,11 +66,12 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     private FirebaseAuth firebaseAuth;
     private DatabaseReference mReference;
     private FirebaseUser firebaseUser;
-    private ImageView imgUser;
-    private CardView cvOut, cvOder, cvPayment, cvTK, cvQLUser, cvQLProduct, cvChangePass, cvAdddiachi;
-    private TextView textViewName, textSDT, textViewEmail, textFixInfor;
+    private ImageView imgUser, update_admin;
+    private CardView cvOut, cvOder, cvPayment, cvReview, cvTK, cvPromotion, cvQLUser, cvQLProduct, cvChangePass, cvAdddiachi;
+    private TextView textViewName, textSDT, textViewEmail, textFixInfor,textWallet;
     private ImageView dialog_AVT;
     private TextInputEditText edImg;
+    private boolean isUserTypeAdmin;
     private static final int PICK_IMAGE_REQUEST = 1;
     private Picasso picasso = Picasso.get();
 
@@ -100,16 +104,20 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         cvOut = view.findViewById(R.id.cvOut);
         cvOder = view.findViewById(R.id.cvOderForShop);
         cvPayment = view.findViewById(R.id.cvPayment);
+
         cvTK = view.findViewById(R.id.cvTK);
+
         cvQLUser = view.findViewById(R.id.cvQLUser);
         cvQLProduct = view.findViewById(R.id.cvQLProduct);
         cvChangePass = view.findViewById(R.id.cvChangePass);
         cvAdddiachi = view.findViewById(R.id.cvAdddiachi);
 
         imgUser = view.findViewById(R.id.imageViewAvatar);
+        update_admin = view.findViewById(R.id.update_admin);
         textViewName = view.findViewById(R.id.textViewName);
         textSDT = view.findViewById(R.id.textSDT);
         textViewEmail = view.findViewById(R.id.textViewEmail);
+        textWallet = view.findViewById(R.id.textWallet);
         textFixInfor = view.findViewById(R.id.textFixInfor);
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -119,6 +127,8 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         String name = sharedPreferences.getString("username", "");
         String phone = sharedPreferences.getString("phone", "");
         String email = sharedPreferences.getString("email", "");
+        float walletFloat = sharedPreferences.getFloat("wallet", 0);
+        double wallet = (double) walletFloat;
         String img = sharedPreferences.getString("img", "");
 
 
@@ -128,6 +138,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             textViewName.setText(name);
             textSDT.setText(phone);
             textViewEmail.setText(email);
+            textWallet.setText("Ví : "+wallet+" VNĐ");
             if (img.equals("")) {
                 imgUser.setImageResource(R.drawable.baseline_person_24);
             } else {
@@ -141,6 +152,48 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         cvOder.setOnClickListener(this);
         cvOut.setOnClickListener(this);
 
+        // Đoạn mã trong phương thức onViewCreated()
+
+        update_admin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Quản trị người dùng");
+
+                if (isUserTypeAdmin) {
+                    // Nếu user_type đang là true (quản trị), hiển thị hộp thoại hỏi muốn hạ cấp hay không
+                    builder.setMessage("Bạn có muốn hạ cấp xuống người dùng?");
+
+                    builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            downgradeToUser();
+                        }
+                    });
+                } else {
+                    // Nếu user_type đang là false (người dùng), hiển thị hộp thoại hỏi muốn nâng cấp hay không
+                    builder.setMessage("Bạn có muốn nâng cấp lên quản trị?");
+
+                    builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            upgradeToAdmin();
+                        }
+                    });
+                }
+
+                builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // Không thực hiện hành động nào
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
         cvPayment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -150,6 +203,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         });
         cvChangePass.setOnClickListener(this);
         cvQLProduct.setOnClickListener(this);
+
         cvTK.setOnClickListener(this);
         cvQLUser.setOnClickListener(this);
         cvAdddiachi.setOnClickListener(new View.OnClickListener() {
@@ -161,6 +215,49 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         });
         textFixInfor.setOnClickListener(this);
     }
+    // Phương thức nâng cấp lên quản trị
+    private void upgradeToAdmin() {
+        String userId = firebaseUser.getUid();
+        DatabaseReference userRef = mReference.child("user").child(userId);
+
+        userRef.child("user_type").setValue(true)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getActivity(), "Nâng cấp thành công", Toast.LENGTH_SHORT).show();
+                        isUserTypeAdmin = true;
+                        startActivity(new Intent(getContext(), MainActivity.class));
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getActivity(), "Nâng cấp thất bại", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // Phương thức hạ cấp xuống người dùng
+    private void downgradeToUser() {
+        String userId = firebaseUser.getUid();
+        DatabaseReference userRef = mReference.child("user").child(userId);
+
+        userRef.child("user_type").setValue(false)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getActivity(), "Hạ cấp thành công", Toast.LENGTH_SHORT).show();
+                        isUserTypeAdmin = false;
+                        startActivity(new Intent(getContext(), MainActivity.class));
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getActivity(), "Hạ cấp thất bại", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
 
     private void setInfoProfile() {
         String id = firebaseUser.getUid();
@@ -171,9 +268,12 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                 String name = snapshot.child("username").getValue(String.class);
                 String phone = snapshot.child("phone").getValue(String.class);
                 String email = snapshot.child("email").getValue(String.class);
+                double wallet = snapshot.child("wallet").getValue(Double.class);
+                float walletFloat = (float) wallet;
                 String img = snapshot.child("img").getValue(String.class);
                 textViewName.setText(name);
                 textViewEmail.setText(email);
+                textWallet.setText("Ví : "+wallet+" VNĐ");
 
                 if (img.equals("") || img.isEmpty()) {
                     imgUser.setImageResource(R.drawable.baseline_person_24);
@@ -186,6 +286,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                     editor.putString("username", name);
                     editor.putString("phone", phone);
                     editor.putString("email", email);
+                    editor.putFloat("wallet", walletFloat);
                     editor.putString("img", img);
                     editor.apply();
                 }
@@ -357,16 +458,22 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 boolean isAdmin = FireBaseType.isAdmin(dataSnapshot);
+                if (dataSnapshot.exists()) {
+                    isUserTypeAdmin = dataSnapshot.child("user_type").getValue(Boolean.class);
+                }
                 if (isAdmin) {
                     cvQLUser.setVisibility(View.VISIBLE);
                     cvQLProduct.setVisibility(View.GONE);
+                    cvOder.setVisibility(View.GONE);
                     cvTK.setVisibility(View.GONE);
 
                 } else {
                     cvQLUser.setVisibility(View.GONE);
+                    cvOder.setVisibility(View.VISIBLE);
                     cvQLProduct.setVisibility(View.VISIBLE);
                     cvTK.setVisibility(View.VISIBLE);
                 }
+                update_admin.setImageResource(isUserTypeAdmin ? R.drawable.baseline_person_24 : R.drawable.update_admin);
             }
 
             @Override
