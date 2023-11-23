@@ -246,8 +246,11 @@ public class AddProductFragment extends Fragment  {
                     if (imageUrls.size() == selectedImageUris.size()) {
                         String userId = firebaseAuth.getCurrentUser().getUid();
 
-                        Discount discount = new Discount();
+                        double discountAmount = 0;
+                        Discount discount = new Discount(discountAmount);
                         discount.setAmount(10.0);
+
+                        // Tạo đối tượng Product và đánh dấu là sản phẩm do người dùng đăng
                         Product product = new Product(
                                 productId, userId, Title, productType,
                                 "categoryID", Brand, Des, imageUrls, selectedColors, 1000, "ngon", Quantity, Price, selectedSize, discount
@@ -256,7 +259,7 @@ public class AddProductFragment extends Fragment  {
 
                         productsRef.child(productId).setValue(product);
                         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
-                        fragmentManager.popBackStack();
+                        fragmentManager.popBackStack(); // Quay lại màn hình trước đó
 
                         ((ManagerProductActivity) requireActivity()).showFloatingActionButton();
                         isAddingProduct = false;

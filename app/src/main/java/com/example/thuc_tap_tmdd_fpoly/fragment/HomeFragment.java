@@ -68,7 +68,6 @@ public class HomeFragment extends Fragment {
     private ChatBot chatBot;
     private MessageAdapter messageAdapter;
     private Spinner spinnerQuestionList;
-
     private RecyclerView recyclerView;
     List<Product> productList;
     DatabaseReference databaseReference;
@@ -94,7 +93,7 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Handler handler = new Handler();     
+        Handler handler = new Handler();
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         textViewName = view.findViewById(R.id.txtName);
@@ -114,12 +113,12 @@ public class HomeFragment extends Fragment {
         imgCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               Intent intent = new Intent(getContext(), CartActivity.class);
-               startActivity(intent);
+                Intent intent = new Intent(getContext(), CartActivity.class);
+                startActivity(intent);
             }
         });
 
-         productHomeAdapter = new ProductHomeAdapter(getContext(), productList);
+        productHomeAdapter = new ProductHomeAdapter(getContext(), productList);
         recyclerView.setAdapter(productHomeAdapter);
         recyclerView2.setAdapter(productHomeAdapter);
         List<Integer> listImageSlide =new ArrayList<>();
@@ -172,7 +171,7 @@ public class HomeFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView2.setLayoutManager(layoutManager2);
 
-        
+
         Runnable sliderRunnable = new Runnable() {
             @Override
             public void run() {
