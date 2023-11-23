@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.thuc_tap_tmdd_fpoly.MainActivity;
 import com.example.thuc_tap_tmdd_fpoly.R;
 import com.example.thuc_tap_tmdd_fpoly.adapter.OrderDetailsAdapter;
+import com.example.thuc_tap_tmdd_fpoly.model.Discount;
 import com.example.thuc_tap_tmdd_fpoly.model.Order;
 import com.example.thuc_tap_tmdd_fpoly.model.Product;
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,20 +52,23 @@ import java.util.Locale;
 public class orderDetailsActivity extends AppCompatActivity {
     private Button btnOrder;
     private RecyclerView rcvOrderDetail;
-
     private TextView txtSubtotal, txtDelivery, txtTax, txtTotal, txtAddress, txtPayment, txtPhone, txtMoney;
-
     private LinearLayout linearLayouAddress, idlr;
     private EditText notes;
-
     private List<Product> productList;
     private List<Integer> colorList;
     private OrderDetailsAdapter adapter;
     private String idProduct;
     private DatabaseReference productRef, userRef;
     private FirebaseUser firebaseUser;
+    private int quantity = 0;
+    private double delivery;
+    private double tax;
+    private double discountAmount;
+
+    private double discountedPrice;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    boolean paid = false;
+    private boolean finalPaid;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -131,12 +135,29 @@ public class orderDetailsActivity extends AppCompatActivity {
 
                         colorList = bundle.getIntegerArrayList("Color");
                         String size = bundle.getString("Size");
-                        int quantity = bundle.getInt("Quantity");
+                        quantity = bundle.getInt("Quantity");
                         List<String> sizeList = new ArrayList<>();
                         sizeList.add(size);
 
+                        DataSnapshot discountSnapshot = dataSnapshot.child("discount");
+                        double discountPercentage = 0.0;
+                        if (discountSnapshot.exists()) {
+                            discountAmount = discountSnapshot.child("amount").getValue(Double.class);
+                            double originalPrice = price * quantity;
+                            discountPercentage = discountAmount / 100.0;
+                            discountedPrice = originalPrice - (originalPrice * discountPercentage);
+
+                            txtSubtotal.setText(String.format("%.0f VND", discountedPrice));
+
+                            double discountValue = originalPrice * discountPercentage;
+                            String discountMessage = String.format("Sản phẩm đã được giảm: %.0f VND", discountValue);
+                            Toast.makeText(orderDetailsActivity.this, discountMessage, Toast.LENGTH_SHORT).show();
+
+                        }
+                        Discount discount = new Discount(discountAmount);
+
                         Product product = new Product(idProduct, idseller, name, null, categoryID, brand,
-                                description, imgProduct, colorList, sold, reviewId, quantity, price, Collections.singletonList(size), null);
+                                description, imgProduct, colorList, sold, reviewId, quantity, price, Collections.singletonList(size), discount);
 
                         product.setSelectedQuantity(quantity);
                         productList = new ArrayList<>();
@@ -148,11 +169,8 @@ public class orderDetailsActivity extends AppCompatActivity {
                         rcvOrderDetail.setLayoutManager(new LinearLayoutManager(orderDetailsActivity.this));
                         rcvOrderDetail.setAdapter(adapter);
 
-                        double subtotal = price * quantity;
-                        txtSubtotal.setText(String.format(subtotal + " VND"));
-
-                        double delivery = 0.0;
-                        double tax = 0.0;
+                        delivery = 0.0;
+                        tax = 0.0;
 
                         String deliveryText = txtDelivery.getText().toString().replace("VND", "");
                         String taxText = txtTax.getText().toString().replace("VND", "");
@@ -165,8 +183,8 @@ public class orderDetailsActivity extends AppCompatActivity {
                             tax = Double.parseDouble(taxText);
                         }
 
-                        double total = subtotal + delivery + tax;
-                        txtTotal.setText(String.valueOf(total));
+                        double total = discountedPrice + delivery + tax;
+                        txtTotal.setText(String.format(total + " VND"));
 
                     } else {
                         productList = new ArrayList<>();
@@ -179,6 +197,7 @@ public class orderDetailsActivity extends AppCompatActivity {
 
             }
         });
+
         btnOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -195,17 +214,17 @@ public class orderDetailsActivity extends AppCompatActivity {
                     return;
                 }
 
-                boolean paid = false;
+                finalPaid = false;
                 if (txtPayment.getText().toString().equalsIgnoreCase("Payment on delivery")) {
-                    paid = false;
+                    finalPaid = false;
                 } else if (txtPayment.getText().toString().equalsIgnoreCase("Pay with wallet")) {
-                    paid = true;
+                    finalPaid = true;
                 }
 
-                if (paid) {
+                if (finalPaid) {
                     double totalAmount = Double.parseDouble(txtTotal.getText().toString());
                     String buyerID = firebaseUser.getUid();
-                    deductAmountFromBuyerWallet(buyerID, totalAmount, newKey, idBuyer, date);
+                    checkSufficientWalletAmount(buyerID, totalAmount, newKey, idBuyer, date);
                 } else {
                     performNextSteps(newKey, idBuyer, date);
                 }
@@ -225,34 +244,6 @@ public class orderDetailsActivity extends AppCompatActivity {
         intent.putExtras(bundle);
         startActivityForResult(intent, Activity.RESULT_CANCELED);
     }
-    private void showDialogOrder() {
-        ConstraintLayout successDialog = findViewById(R.id.successDialog);
-        View view = LayoutInflater.from(orderDetailsActivity.this).inflate(R.layout.success_dialog_order, successDialog);
-        Button successDone = view.findViewById(R.id.btnDone);
-        AlertDialog.Builder builder = new AlertDialog.Builder(orderDetailsActivity.this);
-        builder.setView(view);
-        final AlertDialog alertDialog = builder.create();
-        successDone.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-            }
-        });
-        if (alertDialog.getWindow() != null) {
-            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        }
-        alertDialog.show();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (alertDialog.isShowing()) {
-                    Intent intent = new Intent(orderDetailsActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
-            }
-        }, 1000);
-    }
     private void On_Create_Bill(Order order) {
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         DatabaseReference myRef = firebaseDatabase.getReference("list_order");
@@ -265,27 +256,6 @@ public class orderDetailsActivity extends AppCompatActivity {
             }
         });
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            Bundle bundle = data.getExtras();
-            if (bundle == null) {
-                Toast.makeText(this, "Chưa chọn địa chỉ", Toast.LENGTH_SHORT).show();
-                Log.d("GGGGGGG", "setLocation: ");
-            } else {
-                idlr.setVisibility(View.VISIBLE);
-                String name = bundle.getString("nameLocation");
-                Log.d("HHHHHHHHHHH", "setLocation: " + name);
-                String phone = bundle.getString("phoneLocation");
-                String location = bundle.getString("location");
-                txtAddress.setText(location);
-                txtPhone.setVisibility(View.VISIBLE);
-                txtPhone.setText(phone);
-            }
-        }
-    }
-
     private void poppuGetListPayment() {
         String[] listPayment = {"Payment on delivery", "Pay with wallet"};
         txtPayment.setOnClickListener(view -> {
@@ -304,7 +274,7 @@ public class orderDetailsActivity extends AppCompatActivity {
             popupMenu.show();
         });
     }
-    private void deductAmountFromBuyerWallet(String buyerID, double amount, String newKey, String idBuyer, String date) {
+    private void checkSufficientWalletAmount(String buyerID, double amount, String newKey, String idBuyer, String date) {
         DatabaseReference buyerRef = userRef.child("user").child(buyerID).child("wallet");
         buyerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -312,8 +282,6 @@ public class orderDetailsActivity extends AppCompatActivity {
                 double walletAmount = snapshot.getValue(Double.class);
                 boolean isWalletEnough = walletAmount >= amount;
                 if (isWalletEnough) {
-                    walletAmount -= amount;
-                    buyerRef.setValue(walletAmount);
                     performNextSteps(newKey, idBuyer, date);
                 } else {
                     Toast.makeText(orderDetailsActivity.this, "Số tiền trong ví không đủ", Toast.LENGTH_SHORT).show();
@@ -338,7 +306,6 @@ public class orderDetailsActivity extends AppCompatActivity {
                 if (bundle != null) {
                     int receivedQuantity = bundle.getInt("Quantity");
 
-                    boolean finalPaid = paid;
                     productsRef.child(product.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -368,6 +335,26 @@ public class orderDetailsActivity extends AppCompatActivity {
             }
         }
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            if (bundle == null) {
+                Toast.makeText(this, "Chưa chọn địa chỉ", Toast.LENGTH_SHORT).show();
+                Log.d("GGGGGGG", "setLocation: ");
+            } else {
+                idlr.setVisibility(View.VISIBLE);
+                String name = bundle.getString("nameLocation");
+                Log.d("HHHHHHHHHHH", "setLocation: " + name);
+                String phone = bundle.getString("phoneLocation");
+                String location = bundle.getString("location");
+                txtAddress.setText(location);
+                txtPhone.setVisibility(View.VISIBLE);
+                txtPhone.setText(phone);
+            }
+        }
+    }
     private void addAmountToSellerWallet(String idSeller, double amount) {
         DatabaseReference sellerRef = userRef.child("user").child(idSeller).child("wallet");
         sellerRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -383,6 +370,35 @@ public class orderDetailsActivity extends AppCompatActivity {
             }
         });
     }
+    private void showDialogOrder() {
+        ConstraintLayout successDialog = findViewById(R.id.successDialog);
+        View view = LayoutInflater.from(orderDetailsActivity.this).inflate(R.layout.success_dialog_order, successDialog);
+        Button successDone = view.findViewById(R.id.btnDone);
+        AlertDialog.Builder builder = new AlertDialog.Builder(orderDetailsActivity.this);
+        builder.setView(view);
+        final AlertDialog alertDialog = builder.create();
+        successDone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+        alertDialog.show();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (alertDialog.isShowing()) {
+                    Intent intent = new Intent(orderDetailsActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+        }, 1000);
+    }
+
     private String getCurrentTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
         Date currentDate = new Date();

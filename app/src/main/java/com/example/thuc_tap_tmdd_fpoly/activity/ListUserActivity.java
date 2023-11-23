@@ -127,17 +127,17 @@ public class ListUserActivity extends AppCompatActivity implements UserAdapter.C
                 }
                 adapter.notifyDataSetChanged();
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ListUserActivity.this, "Get Fail !!!"+error.getMessage(), Toast.LENGTH_SHORT).show();
-                Log.d("====", "onCancelled: "+error.getMessage());
+                Toast.makeText(ListUserActivity.this, "Get Fail !!!", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public void itemUserInfo(User user) {
-            OpenDialogUser(ListUserActivity.this,1,user);
+        OpenDialogUser(ListUserActivity.this,1,user);
     }
     void OpenDialogUser(Context context, int type, User user) {
 

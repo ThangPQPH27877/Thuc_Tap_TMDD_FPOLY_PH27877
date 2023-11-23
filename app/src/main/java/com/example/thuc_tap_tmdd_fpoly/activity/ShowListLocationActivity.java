@@ -58,7 +58,7 @@ public class ShowListLocationActivity extends AppCompatActivity implements ShowL
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         String id_user = firebaseUser.getUid();
-        DatabaseReference myReference = firebaseDatabase.getReference("user").child(id_user).child("location");
+        DatabaseReference myReference = firebaseDatabase.getReference("user").child(id_user).child("infolocation");
         myReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

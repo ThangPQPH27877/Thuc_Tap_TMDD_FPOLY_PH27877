@@ -35,7 +35,7 @@ public class AddLocationActivity extends AppCompatActivity implements View.OnCli
         } else if (view.getId() == R.id.btn_addLocation) {
             firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
             String id_user = firebaseUser.getUid();
-            DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("user").child(id_user).child("location");
+            DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("user").child(id_user).child("infolocation");
             String name = binding.edName.getText().toString().trim();
             String phone = binding.edPhone.getText().toString().trim();
             String location = binding.edLocation.getText().toString().trim();
